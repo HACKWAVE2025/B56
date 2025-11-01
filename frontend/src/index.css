@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------- */
+/* --- DYSLEXIA STYLES --- */
+/* ------------------------------------------- */
+
+/* Apply increased spacing and a suitable font (OpenDyslexic font files must be loaded separately) */
+.font-dyslexic {
+    font-family: 'OpenDyslexic', 'Arial', sans-serif !important;
+    word-spacing: 0.15em !important;
+    letter-spacing: 0.05em !important;
+    line-height: 1.8 !important; /* Increased line spacing */
+}
+
+/* ------------------------------------------- */
+/* --- HIGH CONTRAST STYLES --- */
+/* ------------------------------------------- */
+.theme-high-contrast {
+    background-color: #000 !important;
+    color: #FFF !important;
+}
+.theme-high-contrast .bg-white {
+    /* Override standard Tailwind colors in the components */
+    background-color: #000 !important;
+    color: #FFF !important;
+    border-color: #FFF !important;
+}
+
+/* Base styles for the simplified content viewer */
+.simplified-content p {
+    margin-bottom: 1.5rem;
+    padding: 0 1rem;
+    font-size: 1.1rem;
+}

@@ -1,0 +1,13 @@
+# dependencies
+/frontend/node_modules
+/backend/venv
+
+# build outputs
+/frontend/dist
+/backend/__pycache__
+/backend/accessibility_hub/__pycache__
+
+# local runtime files
+/backend/temp_uploads/
+.env
+.DS_Store
