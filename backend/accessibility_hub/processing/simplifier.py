@@ -40,6 +40,26 @@ def simplify_text_rule_based(text, sentence_limit=15):
     # Join simplified paragraphs with structure preserved
     return '\n\n'.join(simplified_segments)
 
+def generate_image_html_placeholder(description="Diagram"):
+    """
+    Generates accessible HTML for an image placeholder.
+    In the final system, the ALT text would be ML-generated.
+    """
+    alt_text = f"Image Description Placeholder: A {description} was found here. Content requires manual description for full accessibility."
+    
+    # Return a stylized, accessible HTML block
+    return f"""
+    <figure class="my-6 p-4 border-2 border-dashed border-gray-400 rounded-lg bg-gray-50 text-center" aria-label="{alt_text}">
+        <div style="font-size: 2.5rem; color: #4F46E5; line-height: 1.5;">🖼️</div>
+        <figcaption class="text-sm font-semibold text-gray-700 mt-2">
+            {description.upper()} PLACEHOLDER
+        </figcaption>
+        <p class="text-xs text-gray-500 mt-1" role="img" aria-label="{alt_text}">
+            {alt_text}
+        </p>
+    </figure>
+    """
+
 def simplify(raw_text):
     """Main simplification entry point."""
     if not raw_text:
