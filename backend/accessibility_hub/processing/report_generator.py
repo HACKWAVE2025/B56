@@ -1,6 +1,6 @@
 import textstat
 import re
-import json # Used for structuring the final output
+import json
 
 def analyze_readability(text):
     """Calculates readability scores for cognitive accessibility."""
@@ -11,13 +11,11 @@ def analyze_readability(text):
             "average_sentence_length": "N/A"
         }
 
-    # Calculate standard readability scores
     try:
         fk_grade = textstat.flesch_kincaid_grade(text)
         ari = textstat.automated_readability_index(text)
         avg_sentence_len = textstat.avg_sentence_length(text)
     except Exception:
-        # Handle case where textstat fails (e.g., text too short or invalid)
         return {
             "flesch_kincaid_grade": "Error", 
             "automated_readability_index": "Error",
@@ -30,22 +28,20 @@ def analyze_readability(text):
         "average_sentence_length": f"{avg_sentence_len:.2f}"
     }
 
-def check_structure(html_content, total_images=1):
+def check_structure(html_content, total_images): # <-- FIX 1: Must accept total_images
     """
     Performs basic structural checks on the simplified HTML.
     Mocks ALT text check based on the inserted placeholder.
     """
     
-    # 1. Heading Check (A basic check for any heading tag usage)
     has_headings = bool(re.search(r'<h[1-6]>', html_content, re.IGNORECASE))
     
-    # 2. ALT Text Check: Checks if the image placeholder (with ALT text) was correctly appended.
-    # We look for the unique ALT text structure generated in the simplifier.
     alt_text_pattern = r'aria-label="Image Description Placeholder:'
     alt_found_count = len(re.findall(alt_text_pattern, html_content))
     
-    # Assuming one placeholder was inserted in the conversion step:
-    alt_missing_count = 1 if total_images > 0 and alt_found_count == 0 else 0
+    # Check against the actual number of images passed
+    alt_missing_count = total_images - alt_found_count 
+    alt_missing_count = max(0, alt_missing_count) # Cannot be negative
         
     return {
         "heading_structure_status": "Found" if has_headings else "Missing",
@@ -54,13 +50,12 @@ def check_structure(html_content, total_images=1):
         "note": "Contrast/Color checks require specific styling data not available in raw HTML text."
     }
 
-def generate_report(simplified_text, simplified_html):
+def generate_report(simplified_text, simplified_html, total_images): # <-- FIX 2: Must accept total_images
     """Generates the full accessibility report."""
     
     readability = analyze_readability(simplified_text)
-    structure_issues = check_structure(simplified_html)
+    structure_issues = check_structure(simplified_html, total_images) # <-- Pass it here
     
-    # Determine overall score based on simple metrics (ARI should be reasonably low)
     ari_score = float(readability["automated_readability_index"]) if readability["automated_readability_index"] not in ["N/A", "Error"] else 100
     
     if structure_issues["alt_missing_count"] == 0 and ari_score <= 14.0:
@@ -74,5 +69,4 @@ def generate_report(simplified_text, simplified_html):
         "structure_analysis": structure_issues,
     }
     
-    # Return as a JSON formatted string for easy API transport
     return json.dumps(report, indent=4)

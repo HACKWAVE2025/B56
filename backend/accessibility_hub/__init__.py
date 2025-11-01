@@ -1,21 +1,26 @@
+import os
 from flask import Flask
 from flask_restful import Api
 from flask_cors import CORS
 
-# Modify create_app to accept static_folder arguments
 def create_app(static_folder=None, static_url_path=None):
-    # Pass the static folder arguments to the Flask constructor
-    app = Flask(__name__, 
-                static_folder=static_folder, 
-                static_url_path=static_url_path)
-    
-    CORS(app) 
+    # Create app instance with custom static paths for serving processed files
+    app = Flask(
+        __name__, 
+        static_folder=static_folder, 
+        static_url_path=static_url_path
+    )
+    CORS(app)  # Enable Cross-Origin Resource Sharing
 
+    # Initialize Flask-RESTful API
     api = Api(app)
 
-    # We must remove the custom ResultFile endpoint since Flask's static handler
-    # will now manage the /api/result/ path automatically.
-    from .api.conversion import Upload
+    # Import and Register API Resources (Endpoints)
+    from .api.conversion import Upload, DownloadEPUB, DownloadPDF # <-- NEW: Import DownloadPDF
+    
     api.add_resource(Upload, '/api/upload')
+    
+    api.add_resource(DownloadEPUB, '/api/download/epub/<string:filename>') 
+    api.add_resource(DownloadPDF, '/api/download/pdf/<string:filename>') # <-- NEW: Register PDF endpoint
     
     return app
