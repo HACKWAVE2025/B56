@@ -1,4 +1,30 @@
+from googletrans import Translator
 import re
+
+def translate_text(text, target_lang='en'):
+    """
+    Translates text to the specified target language using Google Translate.
+    Handles chunking for long texts.
+    """
+    # If no translation is needed (e.g., target is English or text is empty), return original.
+    # This assumes the source is often English or already in the target language.
+    if not text or target_lang == 'en':
+        return text
+    
+    try:
+        translator = Translator()
+        # Google Translate has a limit of 5000 characters. We chunk it to be safe.
+        text_chunks = [text[i:i + 4500] for i in range(0, len(text), 4500)]
+        translated_chunks = []
+        
+        for chunk in text_chunks:
+            translated = translator.translate(chunk, dest=target_lang)
+            translated_chunks.append(translated.text)
+            
+        return "".join(translated_chunks)
+    except Exception as e:
+        print(f"Translation Error: Could not translate to '{target_lang}'. Error: {e}")
+        return text # Fallback to original text if translation fails
 
 def simplify_text_rule_based(text, sentence_limit=15):
     """Applies initial rule-based simplification for cognitive accessibility."""
@@ -98,15 +124,9 @@ def simplify(raw_text):
     if not raw_text:
         return ""
     
-    # Processing Order: Clean clutter -> Insert headings -> Simplify sentences
+    # The simplification process remains language-agnostic
+    cleaned_text = clean_visual_clutter(raw_text)
+    simplified_text = simplify_text_rule_based(cleaned_text)
+    final_text = reintroduce_headings(simplified_text)
     
-    # 1. Clean visual clutter (removes table headers, etc.)
-    simplified_text = clean_visual_clutter(raw_text)
-    
-    # 2. Reintroduce headings (fixes structural accessibility report)
-    simplified_text = reintroduce_headings(simplified_text)
-    
-    # 3. Simplify sentences (core cognitive accessibility)
-    simplified_text = simplify_text_rule_based(simplified_text)
-    
-    return simplified_text
+    return final_text

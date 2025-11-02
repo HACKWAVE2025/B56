@@ -1,59 +1,161 @@
 import React, { useState } from 'react';
 import { useAccessibility } from '../AccessibilityContext'; 
-import { ChevronDown, FileText, Loader, Zap, Download } from 'lucide-react'; 
+import { ChevronDown, FileText, Loader, Zap, Download, Globe } from 'lucide-react';
+import ToggleSwitch from '../components/ToggleSwitch'; // Import the new component
+import "./UploadPage.css";
+
 
 // --- API CONSTANTS ---
 const API_BASE_URL = 'http://127.0.0.1:5000';
 const UPLOAD_API_URL = `${API_BASE_URL}/api/upload`;
 const RESULT_API_URL = `${API_BASE_URL}/api/result`;
-const DOWNLOAD_EPUB_URL = `${API_BASE_URL}/api/download/epub`; 
-const DOWNLOAD_PDF_URL = `${API_BASE_URL}/api/download/pdf`; // NEW CONSTANT
 // --------------------
+
+// --- MULTILINGUAL SUPPORT ---
+const LANGUAGES = {
+    'en': 'English',
+    'es': 'Español (Spanish)',
+    'fr': 'Français (French)',
+    'de': 'Deutsch (German)',
+    'hi': 'हिन्दी (Hindi)',
+    'ta': 'தமிழ் (Tamil)',
+    'te': 'తెలుగు (Telugu)',
+    'kn': 'ಕನ್ನಡ (Kannada)',
+};
+
+const UI_STRINGS = {
+    en: {
+        title: "Choose or Drag & Drop your Educational Material",
+        dropHint: "PDF, DOCX files or YouTube URLs (with transcripts)",
+        dropActive: "✨ Drop your file or YouTube URL here!",
+        youtubeLabel: "Or paste a YouTube URL (transcript will be extracted):",
+        youtubePlaceholder: "https://www.youtube.com/watch?v=...",
+        invalidUrl: "Please enter a valid YouTube URL",
+        generateButton: "Generate Accessible Version",
+        processingDoc: "Processing Document...",
+        processingYT: "Processing YouTube Video...",
+        docType: "(Document)",
+        ytType: "(YouTube + Audio)",
+        conversionComplete: "✅ Conversion Complete!",
+        audioPlayback: "🔊 Audio Playback",
+        downloadAudio: "Download Audio (MP3)",
+        simplifiedContent: "📖 Simplified Content Viewer",
+        startNew: "Start New Conversion",
+        fileSelected: "File selected:",
+        urlEntered: "YouTube URL entered:",
+        selectFileOrUrl: "Please select a file or enter a YouTube URL first.",
+        selectPDFOrDocx: "Please select a PDF or DOCX file.",
+        dropInvalid: "Please drop a valid file (PDF/DOCX) or YouTube URL.",
+        languageSelector: "Language",
+    },
+    es: {
+        title: "Elija o Arrastre y Suelte su Material Educativo",
+        dropHint: "Archivos PDF, DOCX o URLs de YouTube (con transcripciones)",
+        dropActive: "✨ ¡Suelte su archivo o URL de YouTube aquí!",
+        youtubeLabel: "O pegue una URL de YouTube (se extraerá la transcripción):",
+        youtubePlaceholder: "https://www.youtube.com/watch?v=...",
+        invalidUrl: "Por favor, ingrese una URL de YouTube válida",
+        generateButton: "Generar Versión Accesible",
+        processingDoc: "Procesando Documento...",
+        processingYT: "Procesando Video de YouTube...",
+        docType: "(Documento)",
+        ytType: "(YouTube + Audio)",
+        conversionComplete: "✅ ¡Conversión Completa!",
+        audioPlayback: "🔊 Reproducción de Audio",
+        downloadAudio: "Descargar Audio (MP3)",
+        simplifiedContent: "📖 Visor de Contenido Simplificado",
+        startNew: "Iniciar Nueva Conversión",
+        fileSelected: "Archivo seleccionado:",
+        urlEntered: "URL de YouTube ingresada:",
+        selectFileOrUrl: "Por favor, seleccione un archivo o ingrese una URL de YouTube primero.",
+        selectPDFOrDocx: "Por favor, seleccione un archivo PDF o DOCX.",
+        dropInvalid: "Por favor, suelte un archivo válido (PDF/DOCX) o URL de YouTube.",
+        languageSelector: "Idioma",
+    },
+    // Add stubs for other languages to prevent errors and provide some feedback
+    fr: {
+        title: "Choisissez ou glissez-déposez votre matériel pédagogique",
+        dropHint: "Fichiers PDF, DOCX ou URL YouTube",
+        youtubeLabel: "Ou collez une URL YouTube :",
+        generateButton: "Générer une version accessible",
+        languageSelector: "Langue",
+    },
+    de: {
+        title: "Wählen oder ziehen Sie Ihr Lehrmaterial per Drag & Drop",
+        dropHint: "PDF-, DOCX-Dateien oder YouTube-URLs",
+        youtubeLabel: "Oder fügen Sie eine YouTube-URL ein:",
+        generateButton: "Barrierefreie Version erstellen",
+        languageSelector: "Sprache",
+    },
+    hi: {
+        title: "अपनी शैक्षिक सामग्री चुनें या खींचें और छोड़ें",
+        dropHint: "पीडीएफ, DOCX फाइलें या यूट्यूब यूआरएल",
+        youtubeLabel: "या एक यूट्यूब यूआरएल पेस्ट करें:",
+        generateButton: "सुलभ संस्करण उत्पन्न करें",
+        languageSelector: "भाषा",
+    },
+    ta: {
+        title: "உங்கள் கல்விப் பொருளைத் தேர்வுசெய்யவும் அல்லது இழுத்து விடவும்",
+        dropHint: "PDF, DOCX கோப்புகள் அல்லது YouTube URLகள்",
+        youtubeLabel: "அல்லது ஒரு YouTube URL ஐ ஒட்டவும்:",
+        generateButton: " அணுகக்கூடிய பதிப்பை உருவாக்கவும்",
+        languageSelector: "மொழி",
+    },
+    te: {
+        title: "మీ విద్యా సామగ్రిని ఎంచుకోండి లేదా లాగండి మరియు వదలండి",
+        dropHint: "PDF, DOCX ఫైళ్లు లేదా YouTube URLలు",
+        youtubeLabel: "లేదా ఒక YouTube URLను అతికించండి:",
+        generateButton: "ప్రాప్యత సంస్కరణను రూపొందించండి",
+        languageSelector: "భాష",
+    },
+    kn: {
+        title: "ನಿಮ್ಮ ಶೈಕ್ಷಣಿಕ ಸಾಮಗ್ರಿಯನ್ನು ಆಯ್ಕೆಮಾಡಿ ಅಥವಾ ಎಳೆದು ಹಾಕಿ",
+        dropHint: "PDF, DOCX ಫೈಲ್‌ಗಳು ಅಥವಾ YouTube URLಗಳು",
+        youtubeLabel: "ಅಥವಾ YouTube URL ಅನ್ನು ಅಂಟಿಸಿ:",
+        generateButton: "ಪ್ರವೇಶಿಸಬಹುದಾದ ಆವೃತ್ತಿಯನ್ನು ರಚಿಸಿ",
+        languageSelector: "ಭಾಷೆ",
+    }
+};
+// ---------------------------
+
+// A helper to merge incomplete translations with English fallback
+const getTranslatedStrings = (lang) => {
+    const defaultStrings = UI_STRINGS.en;
+    const selectedStrings = UI_STRINGS[lang] || defaultStrings;
+    return { ...defaultStrings, ...selectedStrings };
+};
+
 
 // NOTE: SettingsPanel component defined locally for single-file operation
 const SettingsPanel = () => {
     const { 
         isDyslexicMode, 
-        toggleDyslexicMode, 
-        isHighContrast, 
-        toggleHighContrast 
+        toggleDyslexicMode,
+        isHighContrast,
+        toggleHighContrast,
+        isColorInverted,
+        toggleColorInversion
     } = useAccessibility();
 
-    const Checkbox = ({ checked, onChange, label }) => (
-        <div className="flex items-center space-x-2 cursor-pointer">
-            <input
-                type="checkbox"
-                id={label.replace(/\s/g, '-') + '-checkbox'}
-                checked={checked}
-                onChange={onChange}
-                className="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-            />
-            <label htmlFor={label.replace(/\s/g, '-') + '-checkbox'} className="text-sm font-medium text-gray-700">
-                {label}
-            </label>
-        </div>
-    );
-
     return (
-        <div className="p-4 bg-gray-50 border-t border-b border-gray-200 shadow-inner rounded-b-lg mb-6">
-            <h3 className="text-lg font-semibold text-gray-700 mb-3 border-b pb-2 flex items-center gap-2">
-                <Zap className="w-4 h-4 text-purple-600" /> Accessibility Settings
-            </h3>
-            <div className="flex flex-wrap gap-6">
-                <Checkbox 
-                    checked={isDyslexicMode} 
-                    onChange={toggleDyslexicMode} 
-                    label="Dyslexia Friendly Font" 
-                />
-                <Checkbox 
-                    checked={isHighContrast} 
-                    onChange={toggleHighContrast} 
-                    label="High Contrast Theme" 
-                />
-            </div>
+        <div className="absolute top-4 right-4 p-4 bg-gray-100 rounded-lg shadow-lg border w-64">
+            <h3 className="text-md font-bold text-gray-800 mb-3 text-center">Accessibility Settings</h3>
+            <ToggleSwitch 
+                id="dyslexic-toggle"
+                isToggled={isDyslexicMode}
+                handleToggle={toggleDyslexicMode}
+                label="Dyslexic Font"
+            />
+            <ToggleSwitch 
+                id="inversion-toggle"
+                isToggled={isColorInverted}
+                handleToggle={toggleColorInversion}
+                label="Color Inversion"
+            />
         </div>
     );
 };
+
 
 // Helper component to display the report
 const ReportDisplay = ({ report }) => {
@@ -108,14 +210,17 @@ const ReportDisplay = ({ report }) => {
 function UploadPage() {
     const { isDyslexicMode, isHighContrast } = useAccessibility(); 
     const [file, setFile] = useState(null);
+    const [youtubeUrl, setYoutubeUrl] = useState('');
     const [status, setStatus] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isDragOver, setIsDragOver] = useState(false);
+    const [language, setLanguage] = useState('en');
     
     const [simplifiedHtml, setSimplifiedHtml] = useState(null);
     const [audioPath, setAudioPath] = useState(null);
     const [accessibilityReport, setAccessibilityReport] = useState(null);
-    const [epubPath, setEpubPath] = useState(null); 
-    const [pdfPath, setPdfPath] = useState(null); // PDF Path State
+
+    const t = getTranslatedStrings(language);
 
     const fetchSimplifiedContent = async (filename) => {
         try {
@@ -134,24 +239,84 @@ function UploadPage() {
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
+        handleSelectedFile(selectedFile);
+    };
+
+    const handleSelectedFile = (selectedFile) => {
         if (selectedFile && (selectedFile.type === 'application/pdf' || 
                             selectedFile.name.endsWith('.docx'))) {
             setFile(selectedFile);
-            setStatus(`File selected: ${selectedFile.name}`);
+            setYoutubeUrl(''); // Clear YouTube URL when file is selected
+            setStatus(`${t.fileSelected} ${selectedFile.name}`);
             setSimplifiedHtml(null);
             setAudioPath(null);
             setAccessibilityReport(null);
-            setEpubPath(null); 
-            setPdfPath(null); // Reset PDF Path
         } else {
             setFile(null);
-            setStatus('Please select a PDF or DOCX file.');
+            setStatus(t.selectPDFOrDocx);
+        }
+    };
+
+    const handleYoutubeUrlChange = (e) => {
+        const url = e.target.value;
+        setYoutubeUrl(url);
+        if (url.trim()) {
+            setFile(null); // Clear file when URL is entered
+            setStatus(`${t.urlEntered} ${url}`);
+            setSimplifiedHtml(null);
+            setAudioPath(null);
+            setAccessibilityReport(null);
+        }
+    };
+
+    const isValidYoutubeUrl = (url) => {
+        const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/)|youtu\.be\/)[\w-]+/;
+        return youtubeRegex.test(url);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragOver(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragOver(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragOver(false);
+        
+        const droppedText = e.dataTransfer.getData('text');
+        const droppedFiles = e.dataTransfer.files;
+        
+        // Check if it's a YouTube URL
+        if (droppedText && isValidYoutubeUrl(droppedText)) {
+            setYoutubeUrl(droppedText);
+            setFile(null);
+            setStatus(`${t.urlEntered} ${droppedText}`);
+            setSimplifiedHtml(null);
+            setAudioPath(null);
+            setAccessibilityReport(null);
+        } 
+        // Check if it's a file
+        else if (droppedFiles.length > 0) {
+            handleSelectedFile(droppedFiles[0]);
+        }
+        else {
+            setStatus(t.dropInvalid);
         }
     };
 
     const handleUpload = async () => {
-        if (!file) {
-            setStatus('Please select a file first.');
+        if (!file && !youtubeUrl.trim()) {
+            setStatus(t.selectFileOrUrl);
+            return;
+        }
+
+        if (youtubeUrl.trim() && !isValidYoutubeUrl(youtubeUrl)) {
+            setStatus(t.invalidUrl);
             return;
         }
 
@@ -160,7 +325,13 @@ function UploadPage() {
 
         try {
             const formData = new FormData();
-            formData.append('file', file);
+            
+            if (file) {
+                formData.append('file', file);
+            } else if (youtubeUrl.trim()) {
+                formData.append('youtube_url', youtubeUrl.trim());
+            }
+            formData.append('language', language); // Add language to the request
 
             const response = await fetch(UPLOAD_API_URL, {
                 method: 'POST',
@@ -169,7 +340,7 @@ function UploadPage() {
 
             if (!response.ok) {
                 let errorData = {};
-                try { errorData = await response.json(); } catch {}
+                try { errorData = await response.json(); } catch (e) { console.error('Parse error:', e); }
                 setStatus(`Conversion Failed: ${errorData.message || 'Server returned an error.'}`);
                 setLoading(false);
                 return;
@@ -185,12 +356,6 @@ function UploadPage() {
                 }
                 if (data.audio_file) {
                     setAudioPath(`${RESULT_API_URL}/${data.audio_file}`);
-                }
-                if (data.epub_file) {
-                    setEpubPath(`${DOWNLOAD_EPUB_URL}/${data.epub_file}`);
-                }
-                if (data.pdf_file) { // Path assigned for PDF download
-                    setPdfPath(`${DOWNLOAD_PDF_URL}/${data.pdf_file}`);
                 }
                 
                 if (data.report) {
@@ -229,11 +394,37 @@ function UploadPage() {
 
 
     return (
-        <div className="space-y-6">
+        <div className="page-container space-y-6">
             {!simplifiedHtml ? (
-                // --- UPLOADER VIEW (Colorful and unique design) ---
+                // --- UPLOADER VIEW (Enhanced with drag & drop and YouTube support) ---
                 <>
-                    <div className="bg-indigo-50 p-10 border-4 border-dashed border-indigo-300 rounded-2xl text-center cursor-pointer hover:border-purple-500 transition duration-300 transform hover:scale-[1.01] shadow-xl">
+                    {/* Language Selector */}
+                    <div className="flex justify-center mb-4">
+                        <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow-md border">
+                            <Globe className="w-5 h-5 text-gray-500" />
+                            <select
+                                id="language-select"
+                                value={language}
+                                onChange={(e) => setLanguage(e.target.value)}
+                                className="bg-transparent font-semibold text-gray-700 focus:outline-none"
+                            >
+                                {Object.entries(LANGUAGES).map(([code, name]) => (
+                                    <option key={code} value={code}>{name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div 
+                        className={`p-10 border-4 border-dashed rounded-2xl text-center cursor-pointer transition duration-300 transform shadow-xl ${
+                            isDragOver 
+                                ? 'border-green-500 bg-green-50 scale-[1.02]' 
+                                : 'border-indigo-300 bg-indigo-50 hover:border-purple-500 hover:scale-[1.01]'
+                        }`}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                    >
                         <FileText className="w-12 h-12 text-indigo-500 mx-auto mb-4" />
                         <input 
                             type="file" 
@@ -242,25 +433,48 @@ function UploadPage() {
                             className="hidden" 
                             id="file-upload"
                         />
-                        <label htmlFor="file-upload" className="block text-xl font-bold text-gray-700 cursor-pointer">
-                            {file ? file.name : 'Choose or Drag & Drop your Educational Material'}
+                        <label htmlFor="file-upload" className="block text-xl font-bold text-gray-700 cursor-pointer mb-4">
+                            {file ? `📄 ${file.name}` : t.title}
                         </label>
-                        <p className="mt-1 text-sm text-indigo-400">PDF, DOCX, or URL (max 50MB)</p>
+                        <p className="text-sm text-indigo-400 mb-4">
+                            {isDragOver ? t.dropActive : t.dropHint}
+                        </p>
+                        
+                        {/* YouTube URL Input */}
+                        <div className="mt-6 max-w-md mx-auto">
+                            <label htmlFor="youtube-url" className="block text-sm font-medium text-gray-700 mb-2">
+                                {t.youtubeLabel}
+                            </label>
+                            <input
+                                type="url"
+                                id="youtube-url"
+                                value={youtubeUrl}
+                                onChange={handleYoutubeUrlChange}
+                                placeholder={t.youtubePlaceholder}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            />
+                            {youtubeUrl && !isValidYoutubeUrl(youtubeUrl) && (
+                                <p className="text-red-500 text-xs mt-1">{t.invalidUrl}</p>
+                            )}
+                        </div>
                     </div>
 
                     <button
                         onClick={handleUpload}
-                        disabled={!file || loading}
+                        disabled={(!file && !youtubeUrl.trim()) || loading || (youtubeUrl.trim() && !isValidYoutubeUrl(youtubeUrl))}
                         className={`w-full py-4 px-6 rounded-xl font-extrabold text-white text-lg shadow-lg transition duration-200 transform hover:scale-[1.005] 
-                          ${!file || loading 
+                          ${(!file && !youtubeUrl.trim()) || loading || (youtubeUrl.trim() && !isValidYoutubeUrl(youtubeUrl))
                             ? 'bg-gray-400 cursor-not-allowed shadow-none' 
                             : 'bg-purple-600 hover:bg-purple-700 focus:ring-4 focus:ring-purple-300'
                           }`}
                     >
                         {loading ? (
-                            <span className="flex items-center justify-center"><Loader className="w-5 h-5 mr-2 animate-spin" /> Processing...</span>
+                            <span className="flex items-center justify-center">
+                                <Loader className="w-5 h-5 mr-2 animate-spin" /> 
+                                {file ? t.processingDoc : t.processingYT}
+                            </span>
                         ) : (
-                            'Generate Accessible Version'
+                            `🚀 ${t.generateButton} ${file ? t.docType : youtubeUrl ? t.ytType : ''}`
                         )}
                     </button>
                 </>
@@ -270,7 +484,7 @@ function UploadPage() {
                     
                     <SettingsPanel />
 
-                    <h2 className="text-2xl font-bold text-purple-700 border-b pb-2">✅ Conversion Complete!</h2>
+                    <h2 className="text-2xl font-bold text-purple-700 border-b pb-2">{t.conversionComplete}</h2>
                     
                     {accessibilityReport && <ReportDisplay report={accessibilityReport} />}
                     
@@ -278,7 +492,7 @@ function UploadPage() {
                     {audioPath && (
                         <div className="p-4 border rounded-lg bg-white shadow-md">
                             <h3 className="text-lg font-semibold mb-2 flex items-center gap-2 text-gray-700">
-                                🔊 Audio Playback
+                                {t.audioPlayback}
                             </h3>
                             <audio controls src={audioPath} className="w-full rounded-md shadow-inner">
                                 Your browser does not support the audio element.
@@ -288,27 +502,11 @@ function UploadPage() {
                     
                     {/* DOWNLOAD BUTTONS */}
                     <div className="flex flex-col sm:flex-row gap-4 p-4 border rounded-xl bg-purple-50 shadow-inner">
-                        {/* EPUB Download */}
-                        {epubPath && (
-                            <a href={epubPath} download className="flex-1">
-                                <button className="w-full py-3 px-4 flex items-center justify-center gap-2 rounded-xl font-semibold text-white bg-indigo-500 hover:bg-indigo-600 transition duration-150 shadow-md">
-                                    <Download className="w-5 h-5" /> Download EPUB
-                                </button>
-                            </a>
-                        )}
-                         {/* PDF Download (NEW) */}
-                        {pdfPath && (
-                            <a href={pdfPath} download className="flex-1">
-                                <button className="w-full py-3 px-4 flex items-center justify-center gap-2 rounded-xl font-semibold text-white bg-red-600 hover:bg-red-700 transition duration-150 shadow-md">
-                                    <Download className="w-5 h-5" /> Download PDF
-                                </button>
-                            </a>
-                        )}
                         {/* Audio Download */}
                         {audioPath && (
                             <a href={audioPath} download className="flex-1">
                                 <button className="w-full py-3 px-4 flex items-center justify-center gap-2 rounded-xl font-semibold text-indigo-700 border border-indigo-500 bg-white hover:bg-indigo-50 transition duration-150 shadow-md">
-                                    <span role="img" aria-label="Audio download">🎧</span> Download Audio (MP3)
+                                    <span role="img" aria-label="Audio download">🎧</span> {t.downloadAudio}
                                 </button>
                             </a>
                         )}
@@ -317,7 +515,7 @@ function UploadPage() {
                     {/* Simplified Content Viewer */}
                     <div className="p-0">
                         <h3 className="text-lg font-semibold mb-2 flex items-center gap-2 text-gray-700">
-                            <span role="img" aria-label="Book emoji">📖</span> Simplified Content Viewer
+                            <span role="img" aria-label="Book emoji">📖</span> {t.simplifiedContent}
                         </h3>
                         
                         <div className={contentClasses}>
@@ -329,10 +527,17 @@ function UploadPage() {
                     </div>
 
                     <button
-                        onClick={() => { setSimplifiedHtml(null); setFile(null); setStatus(''); setAudioPath(null); setAccessibilityReport(null); setEpubPath(null); setPdfPath(null); }}
+                        onClick={() => { 
+                            setSimplifiedHtml(null); 
+                            setFile(null); 
+                            setYoutubeUrl(''); 
+                            setStatus(''); 
+                            setAudioPath(null); 
+                            setAccessibilityReport(null); 
+                        }}
                         className="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gray-500 hover:bg-gray-600 transition duration-150 shadow-md"
                     >
-                        Start New Conversion
+                        {t.startNew}
                     </button>
                 </div>
             )}

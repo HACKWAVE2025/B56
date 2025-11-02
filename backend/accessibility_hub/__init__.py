@@ -16,9 +16,10 @@ def create_app(static_folder=None, static_url_path=None):
     api = Api(app)
 
     # Import and Register API Resources (Endpoints)
-    from .api.conversion import Upload, DownloadEPUB, DownloadPDF # <-- NEW: Import DownloadPDF
+    from .api.conversion import Upload, DownloadEPUB, DownloadPDF, ServeFile # <-- NEW: Import ServeFile
     
     api.add_resource(Upload, '/api/upload')
+    api.add_resource(ServeFile, '/api/result/<string:filename>')  # <-- NEW: Serve files endpoint
     
     api.add_resource(DownloadEPUB, '/api/download/epub/<string:filename>') 
     api.add_resource(DownloadPDF, '/api/download/pdf/<string:filename>') # <-- NEW: Register PDF endpoint

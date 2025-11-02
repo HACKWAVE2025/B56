@@ -28,6 +28,20 @@
     border-color: #FFF !important;
 }
 
+/* ------------------------------------------- */
+/* --- COLOR INVERSION STYLES --- */
+/* ------------------------------------------- */
+.theme-color-inverted {
+    filter: invert(100%);
+    background-color: #000; /* Ensure background is black to prevent white flash */
+}
+.theme-color-inverted img, 
+.theme-color-inverted video,
+.theme-color-inverted .icon-no-invert { /* Add a class to opt-out icons/images */
+    filter: invert(100%); /* Double-invert images/videos to show them normally */
+}
+
+
 /* Base styles for the simplified content viewer */
 .simplified-content p {
     margin-bottom: 1.5rem;

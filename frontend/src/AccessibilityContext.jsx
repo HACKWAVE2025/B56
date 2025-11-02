@@ -9,21 +9,21 @@ export const useAccessibility = () => useContext(AccessibilityContext); // <-- N
 // 3. Provider Component (Your original Component, now Step 3)
 export const AccessibilityProvider = ({ children }) => {
   const [isDyslexicMode, setIsDyslexicMode] = useState(false);
-  const [isHighContrast, setIsHighContrast] = useState(false);
+  const [isColorInverted, setIsColorInverted] = useState(false); // New state for color inversion
 
   const toggleDyslexicMode = () => {
     setIsDyslexicMode(prev => !prev);
   };
 
-  const toggleHighContrast = () => {
-    setIsHighContrast(prev => !prev);
+  const toggleColorInversion = () => { // New function to toggle color inversion
+    setIsColorInverted(prev => !prev);
   };
 
   const value = {
     isDyslexicMode,
     toggleDyslexicMode,
-    isHighContrast,
-    toggleHighContrast,
+    isColorInverted, // Expose new state
+    toggleColorInversion, // Expose new function
   };
 
   return (
